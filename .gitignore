@@ -1,104 +1,542 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # Spyder project settings
 .spyderproject
 .spyproject
 
-# Rope project settings
-.ropeproject
+########################################
+"""
+Created on Wed Sep 19 12:19:02 2018
 
-# mkdocs documentation
-/site
+@author: rabdelra
+"""
+############################################# Stage One: Data Manipulation & Description 
+import numpy as np
+import pandas as pd
+import os
+import matplotlib.pyplot as plt
 
-# mypy
-.mypy_cache/
+os.chdir(r'C:\Users\ramsey\Desktop\Python\Final Project\Data') 
+
+Data_Scientist=pd.read_csv("Responses.csv", na_values='', usecols=[0,1,2,3,4,6,7,8,13,51, 54, 55], 
+                           header=0, names=['Gender', 'Country', 'Age', 'Employment', 'Student_Status', 
+                                            'Code_Writer', 'Career_Switcher', 'Current_Job_Title', 
+                                            'Language_Recommendation', 'Time_Spent_Studying', 'Education',
+                                             'Field_of_Education'], dtype={'Age':np.float64})
+##### Age
+bins = [16, 25, 35, 45, 65]
+labels = ['16-24', '25-34', '35-44', '45-65']
+
+Data_Scientist['Age_group'] = pd.cut(Data_Scientist.Age, bins, labels = labels,include_lowest = True)
+Data_Scientist['Age_group'].head(10)
+plt.interactive(False)
+
+
+Data_Scientist['Age_group'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Age_Group')
+plt.title('Respondents Age Categories')
+plt.show()
+#########
+
+def coding(col, codeDict):
+  colCoded = pd.Series(col, copy=True)
+  for key, value in codeDict.items():
+    colCoded.replace(key, value, inplace=True)
+  return colCoded
+
+##### Gender 
+
+G_bins = [0,1,2,3,4]
+G_labels = {"Non-binary, genderqueer, or gender non-conforming": 0, "A different identity": 1, "Female": 2, "Male": 3}
+
+Data_Scientist['Gender_Cat'] = coding(Data_Scientist['Gender'], {"Non-binary, genderqueer, or gender non-conforming": 0, "A different identity": 1, "Female": 2, "Male": 3})
+Data_Scientist['Gender_Cat'] = Data_Scientist['Gender_Cat'].fillna(0) 
+Data_Scientist['Gender_Labeled'] = pd.cut(Data_Scientist.Gender_Cat, G_bins, labels = G_labels, right=False)
+
+
+Data_Scientist['Gender_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Gender Cat')
+plt.title('Gender Categories')
+plt.show()
+
+Data_Scientist['Gender_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Gender Cat')
+plt.title('Gender Categories')
+plt.show()
+
+Data_Scientist['Gender'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Gender')
+plt.title('Gender Data')
+plt.show()
+
+Data_Scientist[['Gender_Cat']].head(10)#data frame
+Data_Scientist[['Gender_Labeled']].head(10)#data frame
+
+
+#### Employment 0:1 dummy (DP) Dependent variable 
+
+Emp_bins = [0,1,2]
+Emp_labels = ["Employed", "Unemployed"]
+
+Data_Scientist['Employment_Cat'] = coding(Data_Scientist['Employment'], {'Retired':1, "Not employed, but looking for work":1,
+              "Not employed, and not looking for work":1, 'I prefer not to say':1, 
+              'Self Employed': 0, "Independent contractor, freelancer, or self-employed":0,
+              "Employed part-time":0, 'Employed full-time':0})
+Data_Scientist['Employment_Cat'] = Data_Scientist['Employment_Cat'].fillna(0) 
+    
+Data_Scientist['Employment_Labeled'] = pd.cut(Data_Scientist.Employment_Cat, Emp_bins, labels = Emp_labels, right=False)
+
+Data_Scientist[['Employment_Cat']].head(10)
+Data_Scientist[['Employment_Labeled']].head(10)
+
+Data_Scientist['Employment_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Employment')
+plt.title('Employment Categories')
+plt.show()
+
+Data_Scientist['Employment_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Employment')
+plt.title('Employment Categories')
+plt.show()
+
+Data_Scientist['Employment'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Employment')
+plt.text(15, 25, r'$\mu=15, b=3$')
+plt.show()
+
+
+##### Country
+
+"""" Country = Canada, Others"""" 
+
+Data_Scientist['Country'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Country')
+plt.text(23, 45, r'$\mu=15, b=3$')
+plt.show()
+
+
+#####  Student_Status= Yes, No 
+
+Stu_bins = [0,1,2]
+Stu_labels = ["Not A Student", "Student"]
+Data_Scientist['Student_Cat'] = coding(Data_Scientist['Student_Status'], {'Yes':1, 'No':0, })### any response unsure of being a student is considered and coded as not 
+Data_Scientist['Student_Cat'] = Data_Scientist['Student_Cat'].fillna(0) 
+Data_Scientist['Student_Labeled'] = pd.cut(Data_Scientist.Student_Cat, Stu_bins, labels = Stu_labels, right=False)
+
+Data_Scientist[['Student_Status']].head(100)
+Data_Scientist[['Student_Cat']].head(100)
+Data_Scientist[['Student_Labeled']].head(100)
+
+
+Data_Scientist['Student_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Student_Status')
+plt.title('Student Respondents')
+plt.show()
+
+Data_Scientist['Student_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Student_Status')
+plt.title('Student Respondents')
+plt.show()
+
+
+###### Code Writer = Yes, No 
+
+CW_bins = [0,1,2]
+CW_labels = ["Not A Code Writer", "Code Writer"]
+
+Data_Scientist['Code_Writer_Cat'] = coding(Data_Scientist['Code_Writer'], {'Yes':1, 'No':0})   
+Data_Scientist['Code_Writer_Cat'] = Data_Scientist['Code_Writer_Cat'].fillna(0) 
+Data_Scientist['Code_Writer_Labeled'] = pd.cut(Data_Scientist.Code_Writer_Cat, CW_bins, labels = CW_labels, right=False)
+
+Data_Scientist[['Code_Writer']].head(10)
+Data_Scientist[['Code_Writer_Cat']].head(10)
+Data_Scientist[['Code_Writer_Labeled']].head(10)
+
+Data_Scientist['Code_Writer_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Code Writers')
+plt.title('Coding Respondents')
+plt.show()
+
+Data_Scientist['Code_Writer_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Code Writers')
+plt.title('Coding Respondents')
+plt.show()
+
+
+##### 'Career_Switcher'
+
+SW_bins = [0,1,2,3]
+SW_labels = ["Unsure","Not A Switcher", "Switcher"]
+Data_Scientist['Career_Switcher_Cat'] = coding(Data_Scientist['Career_Switcher'], {'Unsure':0, 'No':1, 'Yes':2,})
+Data_Scientist['Career_Switcher_Cat'] = Data_Scientist['Career_Switcher_Cat'].fillna(0) 
+Data_Scientist['Career_Switcher_Labeled'] = pd.cut(Data_Scientist.Career_Switcher_Cat, SW_bins, labels = SW_labels, right=False)
+
+Data_Scientist[['Career_Switcher']].tail(100)
+Data_Scientist[['Career_Switcher_Cat']].head(100)
+Data_Scientist[['Career_Switcher_Labeled']].head(100)
+
+Data_Scientist['Career_Switcher_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Changing Career')
+plt.title('Career Switching Categories')
+plt.show()
+
+Data_Scientist['Career_Switcher_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Changing Career')
+plt.title('Career Switching Respondents')
+plt.show()
+
+##### Current_Job_Title 
+
+Job_bins = [0,1,2,3,4]
+Job_labels = ["Other","IT", "Data Analyst", "Data Scientist"]
+Data_Scientist['Current_Job_CAT'] = coding(Data_Scientist['Current_Job_Title'], 
+              {'Data Scientist':3, 'Data Analyst':2,  'DBA/Database Engineer':1, 'Operations Research Practitioner':0,
+               'Computer Scientist':1, 'Software Developer/Software Engineer':1, 'Business Analyst':2, 'Data Miner':2, 'Engineer':0, 
+                'DBA/Database Engineer':1, 'Scientist/Researcher':0, 'Researcher':0, 'Machine Learning Engineer':1, 'Other':0, 
+                'Predictive Modeler':0, 'Programmer':1, 'Statistician':2})   
+Data_Scientist['Current_Job_CAT'] = Data_Scientist['Current_Job_CAT'].fillna(0) 
+Data_Scientist['Current_Job_Labeled'] = pd.cut(Data_Scientist.Current_Job_CAT, Job_bins, labels = Job_labels, right=False)
+
+Data_Scientist[['Current_Job_CAT']].head(10)
+Data_Scientist[['Current_Job_Title']].head(10)
+Data_Scientist[['Current_Job_Labeled']].head(10)
+
+
+Data_Scientist['Current_Job_Title'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Current_Job_Title')
+plt.show()
+
+Data_Scientist['Current_Job_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Job Category')
+plt.title('Current Job of Respondents')
+plt.show()
+
+##### Program Languages ... 
+
+"""Question: Is Metro Bluffing?"""
+
+L_bins = [0,1,2,3,4,5]
+L_labels = ["Other","SAS", "SQL", "R", "Python"]
+Data_Scientist['Language_Recommendation_Cat'] = coding(Data_Scientist['Language_Recommendation'], 
+              {'Python':4, 'R':3,  'SQL':2, 'SAS':1, 'C/C++/C#':0,
+               'Matlab':0, 'Java':0, 'Scala':0, 'Other':0, 'Julia':0, 'Stata':0,
+                'Haskell':0, 'F#':0}) 
+Data_Scientist['Language_Recommendation_Cat'] = Data_Scientist['Language_Recommendation_Cat'].fillna(0) 
+Data_Scientist['Language_Recommendation_Labeled'] = pd.cut(Data_Scientist.Language_Recommendation_Cat, L_bins, labels = L_labels, right=False)
+
+Data_Scientist[['Language_Recommendation']].head(10)
+Data_Scientist[['Language_Recommendation_Cat']].head(10)
+Data_Scientist[['Language_Recommendation_Labeled']].head(10)
+            
+Data_Scientist['Language_Recommendation'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Preferred Languages of Respondents')
+plt.text(23, 45, r'$\mu=15, b=3$')
+plt.show()
+
+Data_Scientist['Language_Recommendation_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Language Category')
+plt.title('Preferred Languages of Respondents')
+plt.show()
+
+Data_Scientist['Language_Recommendation_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Language Category')
+plt.title('Preferred Languages of Respondents')
+plt.show()
+
+#### Time of Study / week  
+
+"""Question: Are we lazy students?"""
+
+T_bins = [0,1,2,3,4]
+T_labels = ['0 - 1 hour', '2 - 10 hours', '11 - 39 hours', '40+']
+Data_Scientist['StudyTime_PerWeek_Cat'] = coding(Data_Scientist['Time_Spent_Studying'], {'0 - 1 hour':0, '2 - 10 hours':1, '11 - 39 hours': 2, '40+':3 })   
+Data_Scientist['StudyTime_PerWeek_Cat'] = Data_Scientist['StudyTime_PerWeek_Cat'].fillna(0) 
+Data_Scientist['StudyTime_PerWeek_Labeled'] = pd.cut(Data_Scientist.StudyTime_PerWeek_Cat, T_bins, labels = T_labels, right=False)
+
+Data_Scientist[['StudyTime_PerWeek_Cat']].head(10)
+Data_Scientist[['Time_Spent_Studying']].head(10)
+Data_Scientist[['StudyTime_PerWeek_Labeled']].head(10)
+
+Data_Scientist['StudyTime_PerWeek_Cat'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('StudyTime Category')
+plt.title('StudyTime of Respondents')
+plt.show()
+
+Data_Scientist['StudyTime_PerWeek_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('StudyTime Category')
+plt.title('StudyTime of Respondents')
+plt.show()
+
+
+#### Education 
+
+E_bins = [0,1,2,3,4,5]
+E_labels = ["No Formal Education","Some College", "Bachelor", "Master", "PH.D"]
+Data_Scientist['Education_Cat'] = coding(Data_Scientist['Education'], {"I did not complete any formal education past high school":0, 
+              "I prefer not to answer":0, "Professional degree":1,
+              "Some college/university study without earning a bachelor's degree":1, 
+              "Bachelor's degree": 2,
+              "Master's degree":3,
+              "Doctoral degree":4})
+Data_Scientist['Education_Cat'] = Data_Scientist['Education_Cat'].fillna(0) 
+Data_Scientist['Education_Labeled'] = pd.cut(Data_Scientist.Education_Cat, E_bins, labels = E_labels, right=False)
+  
+
+Data_Scientist[['Education']].head(10)
+Data_Scientist[['Education_Cat']].head(10)
+Data_Scientist[['Education_Labeled']].head(10)
+
+Data_Scientist['Education'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Education Level')
+plt.show()
+
+
+Data_Scientist['Education_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Educational Level Category')
+plt.title('Education Level of Respondents')
+plt.show()
+                          
+#### Field of Education .... to use frequencies 
+
+"""Question: How many of the respondents were from social science and humanties fields? Why they are interested in Data Science?"""
+
+FE_bins = [0,1,2,3,4,5]
+FE_labels = ["Other", "Social Science", "Natural Science", "Engineering", "Computer Science/IT"]
+Data_Scientist['Field_of_Education_Cat'] = coding(Data_Scientist['Field_of_Education'],         
+              {"Management information systems":4, "Other":0, "Biology": 2, "Physics": 2, 
+              "Computer Science":4, "Engineering (non-computer focused)":3,
+              "Mathematics or statistics":2, "A health science":2, 
+              "Electrical Engineering": 3, "A social science":1, "I never declared a major":0, 
+              "Information technology, networking, or system administration":4, "Psychology":1, 
+              "A humanities discipline":1, "Fine arts or performing arts":0}) 
+Data_Scientist['Field_of_Education_Cat'] = Data_Scientist['Field_of_Education_Cat'].fillna(0) 
+Data_Scientist['Field_of_Education_Labeled'] = pd.cut(Data_Scientist.Field_of_Education_Cat, FE_bins, labels = FE_labels, right=False)
+  
+Data_Scientist[['Field_of_Education']].head(10)
+Data_Scientist[['Field_of_Education_Cat']].head(10)
+Data_Scientist[['Field_of_Education_Labeled']].head(10)
+
+Data_Scientist['Field_of_Education'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.title('Field_of_Education')
+plt.show()
+
+Data_Scientist['Field_of_Education_Labeled'].value_counts().plot(kind='bar')
+plt.grid(axis='y', alpha=0.75)
+plt.ylabel('Frequency')
+plt.xlabel('Field of Education Category')
+plt.title('Respondents Field of Education')
+plt.show()
+
+##################################### Stage Two: Descriptive Statistics, Plotting and scattering 
+
+
+import statsmodels.api as sm
+
+import statsmodels.formula.api as smf
+
+import seaborn as sns
+
+"""Checking the association between two variables with referrence to the P value (Statistical Signficance)"""
+
+
+sns.jointplot(x="Gender_Cat", y="Education_Cat", data=Data_Scientist, kind="reg");
+plt.show()### Does gender have effect on tendency to learn data science? 
+
+sns.jointplot(x="Language_Recommendation_Cat", y="Employment_Cat", data=Data_Scientist, kind="reg");
+plt.show()### Do you get more job opportuntities if you learn more languages 
+
+sns.jointplot(x="Language_Recommendation_Cat", y="StudyTime_PerWeek_Cat", data=Data_Scientist, kind="reg");
+plt.show()## how much time do you need to spend to learn more languages? 
+
+sns.jointplot(x="Student_Cat", y="Employment_Cat", data=Data_Scientist, kind="reg");
+plt.show()## Are the respondent students employed? 
+
+sns.jointplot(x="Student_Cat", y="Career_Switcher_Cat", data=Data_Scientist, kind="reg");
+plt.show()## Do most the respondent students switch career? 
+
+sns.jointplot(x="Current_Job_CAT", y="Code_Writer_Cat", data=Data_Scientist, kind="reg");
+plt.show()### what is the relationship between the code writing skills and current job title? 
+
+#### Data about Canada
+
+
+Canada = Data_Scientist.loc[Data_Scientist['Country'] == 'Canada']
+
+
+sns.jointplot(x="Gender_Cat", y="Education_Cat", data=Canada, kind="reg")
+plt.show()### Does gender have effect on tendency to learn data science? 
+
+sns.jointplot(x="Language_Recommendation_Cat", y="Employment_Cat", data=Canada, label ="Canada", kind="reg");
+plt.show()### Do you get more job opportuntities if you learn more languages 
+
+sns.jointplot(x="Language_Recommendation_Cat", y="StudyTime_PerWeek_Cat", data=Canada, kind="reg");
+plt.show()## how much time do you need to spend to learn more languages? 
+
+sns.jointplot(x="Student_Cat", y="Employment_Cat", data=Canada, kind="reg");
+plt.show()## Are the respondent students employed? 
+
+sns.jointplot(x="Student_Cat", y="Career_Switcher_Cat", data=Canada, kind="reg");
+plt.show()## Do most the respondent students switch career? 
+
+sns.jointplot(x="Current_Job_CAT", y="Code_Writer_Cat", data=Canada, kind="reg");
+plt.show()### what is the relationship between the code writing skills and current job title? 
+
+
+
+Canada.to_excel('Canada_Data.xlsx')
+
+############################################## Satge Two: Statistical Tests & Modeling 
+
+result1 = smf.ols('Employment_Cat ~ C(Field_of_Education)', data=Data_Scientist).fit()
+print(result1.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(result1.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+
+result2 = smf.ols('Employment_Cat ~ C(Language_Recommendation)', data=Data_Scientist).fit()
+print(result2.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(result2.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+"""Question: Is Metro Bluffing?"""
+
+result3 = smf.ols(' Employment_Cat ~ Language_Recommendation_Labeled', data=Data_Scientist).fit()
+print(result3.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(result3.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+
+""" How do all those variables affect the possibility of employment under their conditions?"""
+
+final_OLS = smf.ols('Employment_Cat ~ + Field_of_Education_Labeled + Education_Labeled + Gender_Labeled + Age_group + Student_Labeled + StudyTime_PerWeek_Labeled + Language_Recommendation_Labeled + Code_Writer_Labeled + Career_Switcher_Labeled + StudyTime_PerWeek_Labeled', data=Data_Scientist).fit()
+print(final_OLS.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(final_OLS.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+
+
+""" How do all those variables affect the possibility of employment In Canada?"""
+
+
+Canada_OLS = smf.ols('Employment_Cat ~ + Field_of_Education_Labeled + Education_Labeled + Gender_Labeled + Age_group + Student_Labeled + StudyTime_PerWeek_Labeled + Language_Recommendation_Labeled + Code_Writer_Labeled + Career_Switcher_Labeled + StudyTime_PerWeek_Labeled', data=Canada).fit()
+print(Canada_OLS.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(Canada_OLS.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+### using the model for predictions 
+
+model = sm.OLS(Data_Scientist['Employment_Cat'], Data_Scientist['Gender_Cat']).fit()
+predictions = model.predict(Data_Scientist['Gender_Cat'])
+model.summary()
+print(predictions.head(10))
+
+model = sm.OLS(Data_Scientist['Employment_Cat'], Data_Scientist['Language_Recommendation_Cat']).fit()
+predictions = model.predict(Data_Scientist['Language_Recommendation_Cat'])
+model.summary()
+print(predictions.head(10))
+
+model = sm.OLS(Data_Scientist['Employment_Cat'], Data_Scientist['Field_of_Education_Cat']).fit()
+predictions = model.predict(Data_Scientist['Field_of_Education_Cat'])
+model.summary()
+print(predictions.head(100))
+
+
+
+
+
+### Generalized Linear Model (GLM) 
+
+Canada_GLM = sm.formula.glm('Employment_Cat ~ + Field_of_Education_Labeled + Education_Labeled + Gender_Labeled + Age_group + Student_Labeled + StudyTime_PerWeek_Labeled + Language_Recommendation_Labeled + Code_Writer_Labeled + Career_Switcher_Labeled + StudyTime_PerWeek_Labeled', family=sm.families.Binomial(), data=Canada).fit() 
+print(Canada_GLM.summary())
+plt.rc('figure', figsize=(12, 7))
+#plt.text(0.01, 0.05, str(model.summary()), {'fontsize': 12}) old approach
+plt.text(0.01, 0.05, str(Canada_GLM.summary()), {'fontsize': 10}, fontproperties = 'monospace') # approach improved by OP -> monospace!
+plt.axis('off')
+plt.tight_layout()
+plt.savefig('output.png')
+plt.show()
+
+
+################## the end 
+
+For future project 
+
+pd.get_dummies
+
+
+Data_Scientist['Current_Job_Title'].str.strip('[]').str.get_dummies(', ')
+
+Canada_binary = Data_Scientist[:].str.strip('[]').str.get_dummies(', ')
+
+
